@@ -1,0 +1,91 @@
+void biLinearMethod()
+    {
+        // начальные значения шага и границ интерполирования
+        double left = this.getX().getVector()[0];
+        double right = this.getX().getVector()[this.getX().getVectorSize() - 1];
+        double step = (this.getX().getItem(1) - this.getX().getItem(0)) / 2;
+
+        // копируем векторы Х и У, и матрицу значений
+        Vector copyX = this.getX().cloneVector();
+        Vector copyY = this.getY().cloneVector();
+        Matrix copyValues = this.values.cloneMatrix();
+
+        System.out.println("FIRST CYCLE");
+        // разделяем вектора значений на части по два на каждом шаге записывая в список
+        Vector xToChange; Vector yToChange;
+        for (int i = 0, placeToAddX = 0; i < this.values.getRowsCount() - 1; i++, placeToAddX+=2)
+        {
+            // создаем временный столбец новых промежуточных значений для добавления в исходную матрицу зачений
+            double[] tmpCol = new double[this.values.getRowsCount()];
+            // новое промежуточное значение Х
+            double stepX = 0;
+            for (int j = 0; j < this.values.getColumnsCount() - 1; j++)
+            {
+                xToChange = this.getX().partOfVector(j, j + 1);
+                // задаем новые промежуточные значения Х учитывая шаг
+                stepX = this.pointStepArithmetic(step, xToChange);
+                // разделяем матрицу значений на части для вычисления промежуточных значений
+                Matrix valuesToChange;
+                if (j == this.values.getColumnsCount() - 2)
+                    valuesToChange = this.values.partOfMatrix(i, i + 1, j + 1, j + 1);
+                else
+                    valuesToChange = this.values.partOfMatrix(i, i + 1, j, j + 1);
+
+                // рассчет промежуточных значений
+                double z11, z21, z12, z22, interNodeValueByX1 = 0, interNodeValueByX2 = 0;
+                if (valuesToChange.getRowsCount() == 1)
+                {
+                    z11 = valuesToChange.getMatrix()[0][0];
+                    z21 = valuesToChange.getMatrix()[0][1];
+                    interNodeValueByX1 = this.intermediateValuesArithmetic(z11, z21, stepX, xToChange);
+
+                    tmpCol[j + 1] = interNodeValueByX1;
+                }
+                else if (valuesToChange.getRowsCount() == 2)
+                {
+                    z11 = valuesToChange.getMatrix()[0][0];
+                    z21 = valuesToChange.getMatrix()[0][1];
+                    interNodeValueByX1 = this.intermediateValuesArithmetic(z11, z21, stepX, xToChange);
+
+                    z12 = valuesToChange.getMatrix()[1][0];
+                    z22 = valuesToChange.getMatrix()[1][1];
+                    interNodeValueByX2 = this.intermediateValuesArithmetic(z12, z22, stepX, xToChange);
+
+                    tmpCol[j] = interNodeValueByX1;
+                    tmpCol[j + 1] = interNodeValueByX2;
+                }
+            }
+            copyX.addItemAfter(stepX, placeToAddX);
+            copyValues.addColumnAfter(tmpCol, placeToAddX);
+        }
+        this.arguments.set(0, copyX.cloneVector());
+        this.values = copyValues.cloneMatrix();
+
+        System.out.println("\nSECOND CYCLE");
+        // новое промежуточное значение У
+        double stepY = 0;
+        // создаем временную строку новых промежуточных значений для добавления в исходную матрицу зачений
+        double[] tmpRow = new double[this.values.getColumnsCount()];
+        for (int i = 0, placeToAddY = 0; i < this.values.getRowsCount() - 1; i++, placeToAddY+=2)
+        {
+            yToChange = this.getY().partOfVector(i, i + 1);
+            // задаем новые промежуточные значения У учитывая шаг
+            stepY = this.pointStepArithmetic(step, yToChange);
+            Matrix valuesToChange = this.values.partOfMatrix(0, this.values.getColumnsCount() - 1, i, i + 1);
+            for (int j = 0; j < valuesToChange.getColumnsCount(); j++)
+            {
+                tmpRow[j] = intermediateValuesArithmetic(valuesToChange.getItem(0, j), valuesToChange.getItem(1, j), stepY, yToChange);
+                System.out.println(j + " " + tmpRow[j]);
+            }
+            copyValues.addRowAfter(tmpRow, placeToAddY);
+            copyValues.printMatrix();
+        }
+    }
+
+    double intermediateValuesArithmetic(double z1, double z2, double pointStep, Vector point)
+        {
+            double firstMultiplier = (point.getVector()[1] - pointStep) / (point.getVector()[1] - point.getVector()[0]);
+            double secondMultiplier = (pointStep - point.getVector()[0]) / (point.getVector()[1] - point.getVector()[0]);
+
+            return firstMultiplier * z1 + secondMultiplier * z2;
+        }

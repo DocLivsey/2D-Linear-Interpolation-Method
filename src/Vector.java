@@ -59,32 +59,25 @@ public class Vector {
     }
     int getVectorSize() { return this.vectorSize; }
     double[] getVector() { return this.vector; }
-    void setItem(double replaceItem, int index)
+    double getItem(int index) { return this.vector[index]; }
+    void setItem(int index, double replaceItem)
     { this.vector[index] = replaceItem; }
-    void addItem(double item)
-    {
-        this.vectorSize ++;
-        double[] newVector = new double[this.vectorSize];
-        for (int i = 0; i < this.vectorSize; i++)
-        {
-            if (i != this.vectorSize - 1)
-                newVector[i] = this.vector[i];
-            else
-                newVector[i] = item;
-        }
-        this.vector = newVector;
-    }
     void setVector(double[] vector)
     {
         System.out.println(Main.CHOOSE + "Вы уверены, что хотите заменить вектор?" + Main.RESET);
         this.vector = vector;
     }
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
+    Vector cloneVector()
+    { return new Vector(this.vector, this.vectorSize); }
     void printVector()
     {
         System.out.print(Main.HEADER_OUTPUT + "\nВектор размерностью " + vectorSize + Main.OUTPUT + ": \n { ");
         for (int i = 0; i < vectorSize; i++)
         {
-            System.out.print(this.vector[i] + "; ");
+            System.out.print(this.getItem(i) + "; ");
         }
         System.out.println("}" + Main.RESET);
     }
@@ -94,10 +87,59 @@ public class Vector {
         for (int i = 0; i < vectorSize; i++)
         {
             DecimalFormat shortOut = new DecimalFormat("#.##");
-            String result = shortOut.format(this.vector[i]);
+            String result = shortOut.format(this.getItem(i));
             System.out.print(result + "; ");
         }
         System.out.println("}" + Main.RESET);
+    }
+    void addItem(double item)
+    {
+        this.vectorSize ++;
+        double[] newVector = new double[this.vectorSize];
+        for (int i = 0; i < this.vectorSize; i++)
+        {
+            if (i != this.vectorSize - 1)
+                newVector[i] = this.getItem(i);
+            else
+                newVector[i] = item;
+        }
+        this.vector = newVector;
+    }
+    void addItemBefore(double item, int index)
+    {
+        this.vectorSize ++;
+        double[] newVector = new double[this.vectorSize];
+        newVector[index] = item;
+        for (int i = 0; i < this.vectorSize; i++)
+        {
+            if (i < index)
+                newVector[i] = this.getItem(i);
+            else if (i > index)
+                newVector[i] = this.getItem(i - 1);
+        }
+        this.vector = newVector;
+    }
+    void addItemAfter(double item, int index)
+    {
+        this.vectorSize ++;
+        double[] newVector = new double[this.vectorSize];
+        newVector[index + 1] = item;
+        for (int i = 0; i < this.vectorSize; i++)
+        {
+            if (i < index + 1)
+                newVector[i] = this.getItem(i);
+            else if (i > index + 1)
+                newVector[i] = this.getItem(i - 1);
+        }
+        this.vector = newVector;
+    }
+    Vector partOfVector(int leftBorder, int rightBorder)
+    {
+        int newVectorSize = rightBorder - leftBorder + 1;
+        double[] vectorPart = new double[newVectorSize];
+        for (int oldIndex = leftBorder, newIndex = 0; oldIndex < rightBorder + 1; oldIndex++, newIndex++)
+            vectorPart[newIndex] = this.getItem(oldIndex);
+        return new Vector(vectorPart, newVectorSize);
     }
     Vector constantMultiplication(double constant)
     {
@@ -117,7 +159,7 @@ public class Vector {
         {
             double[] newVector = this.vector;
             for (int i = 0; i < this.vectorSize; i++)
-                newVector[i] = this.vector[i] + addVector.getVector()[i];
+                newVector[i] = this.getItem(i) + addVector.getItem(i);
             return new Vector(newVector,this.vectorSize);
         }
     }
@@ -132,7 +174,15 @@ public class Vector {
     {
         double[][] convertMatrix = new double[this.vectorSize][1];
         for (int i = 0; i < this.vectorSize; i++)
-            convertMatrix[i][0] = this.vector[i];
+            convertMatrix[i][0] = this.getItem(i);
         return new Matrix(convertMatrix, this.vectorSize, 1);
     }
+    boolean isInVector(double item)
+    {
+        for (double i : this.vector)
+            if (i == item) return true;
+        return false;
+    }
+    void sort()
+    { Arrays.sort(this.vector); }
 }
