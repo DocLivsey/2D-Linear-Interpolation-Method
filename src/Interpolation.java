@@ -36,84 +36,81 @@ public class Interpolation {
         int coefficient = expandedSize / 2;
         return (point.getItem(1) - point.getItem(0)) / coefficient;
     }
-    void triangleValueArithmetic(Vector originX, Vector originY, Matrix partOfValues, Vector targetX, Vector targetY, Matrix changeValue, int rowPlaceInd, int colPlaceInd)
+    void setLeftUpTriangle(Vector leftUpTriangle, Vector pointsX, Vector pointsY, Matrix partOfValues, Vector xToPlace, Vector yToPlace)
     {
-        Vector lefUpTriangle = new Vector(3);
-        Vector rightUpTriangle = new Vector(3);
-        // верхний левый треугольник
         for (int i = 0, placeInd = 0; i < partOfValues.getRowsCount(); i++)
         {
-            for (int j = partOfValues.getColumnsCount() - 1; j >= 0; j--)
+            for (int j = 0; j < partOfValues.getColumnsCount(); j++)
                 if (i != partOfValues.getRowsCount() - 1 || j != partOfValues.getColumnsCount() - 1)
                 {
-                    lefUpTriangle.setItem(placeInd, partOfValues.getItem(i, j));
+                    leftUpTriangle.setItem(placeInd, partOfValues.getItem(i, j));
+                    xToPlace.setItem(placeInd, pointsX.getItem(j));
+                    yToPlace.setItem(placeInd, pointsY.getItem(i));
                     placeInd++;
                 }
         }
-        // нижний правый треугольник
+    }
+    void setRightDownTriangle(Vector rightDownTriangle, Vector pointsX, Vector pointsY, Matrix partOfValues, Vector xToPlace, Vector yToPlace)
+    {
         for (int i = partOfValues.getRowsCount() - 1, placeInd = 0; i >= 0; i--)
         {
-            for (int j = 0; j < partOfValues.getColumnsCount(); j++)
+            for (int j = partOfValues.getColumnsCount() - 1; j >= 0; j--)
                 if (i != 0 || j != 0)
                 {
-                    rightUpTriangle.setItem(placeInd, partOfValues.getItem(i, j));
+                    rightDownTriangle.setItem(placeInd, partOfValues.getItem(i, j));
+                    xToPlace.setItem(placeInd, pointsX.getItem(j));
+                    yToPlace.setItem(placeInd, pointsY.getItem(i));
                     placeInd++;
                 }
         }
-        lefUpTriangle.printVector();
+    }
+    double planeCoefficient(Vector x, Vector y, Vector z, String coeffName)
+    {
+        Matrix coeffMatrix = new Matrix(3, 3);
+        switch (coeffName)
+        {
+            case "A":
+                coeffMatrix.setColumn(new double[]{1, 1, 1}, 0);
+                coeffMatrix.setColumn(y.getVector(), 1);
+                coeffMatrix.setColumn(z.getVector(), 2);
+                break;
+            case "B":
+                coeffMatrix.setColumn(x.getVector(), 0);
+                coeffMatrix.setColumn(new double[]{1, 1, 1}, 1);
+                coeffMatrix.setColumn(z.getVector(), 2);
+                break;
+            case "C":
+                coeffMatrix.setColumn(x.getVector(), 0);
+                coeffMatrix.setColumn(y.getVector(), 1);
+                coeffMatrix.setColumn(new double[]{1, 1, 1}, 2);
+                break;
+            case "D":
+                coeffMatrix.setColumn(x.getVector(), 0);
+                coeffMatrix.setColumn(y.getVector(), 1);
+                coeffMatrix.setColumn(z.getVector(), 2);
+                break;
+        }
+        if (Math.abs(coeffMatrix.gaussianDeterminant()) < this.epsilon)
+        { return 0; }
+        else
+        {
+            if (coeffName.equals("D"))
+                return -coeffMatrix.gaussianDeterminant();
+            return coeffMatrix.gaussianDeterminant();
+        }
+    }
+    void triangleValueArithmetic(Vector originX, Vector originY, Matrix partOfValues, Vector targetX, Vector targetY, Matrix changeValue, int rowPlaceInd, int colPlaceInd)
+    {
+        Vector xToPlace = new Vector(3);
+        Vector yToPlace = new Vector(3);
+        Vector leftUpTriangle = new Vector(3);
+        this.setLeftUpTriangle(leftUpTriangle, originX, originY, partOfValues, xToPlace, yToPlace);
+        leftUpTriangle.printFormattedVector(); xToPlace.printFormattedVector(); yToPlace.printFormattedVector();
 
-        Matrix D0 = new Matrix(3, 3);
-        D0.setColumn(lefUpTriangle.getVector(), 2);
-        for (int i = 0, placeInd = 0; i < originY.getVectorSize(); i++)
-        {
-            for (int j = originX.getVectorSize() - 1; j >= 0; j--)
-                if (i != partOfValues.getRowsCount() - 1 || j != partOfValues.getColumnsCount() - 1)
-                {
-                    D0.setItem(placeInd, 0, originX.getItem(j));
-                    D0.setItem(placeInd, 1, originY.getItem(i));
-                    placeInd++;
-                }
-        }
-        double detD0 = D0.gaussianDeterminant();
-        Matrix D1 = new Matrix(3, 3);
-        D1.setColumn(lefUpTriangle.getVector(), 1);
-        for (int i = 0, placeInd = 0; i < originY.getVectorSize(); i++)
-        {
-            for (int j = originX.getVectorSize() - 1; j >= 0; j--)
-                if (i != partOfValues.getRowsCount() - 1 || j != partOfValues.getColumnsCount() - 1)
-                {
-                    D1.setItem(placeInd, 2, 1);
-                    D1.setItem(placeInd, 0, originY.getItem(i));
-                    placeInd++;
-                }
-        }
-        double detD1 = D1.gaussianDeterminant();
-        Matrix D2 = new Matrix(3, 3);
-        D2.setColumn(lefUpTriangle.getVector(), 1);
-        for (int i = 0, placeInd = 0; i < originY.getVectorSize(); i++)
-        {
-            for (int j = originX.getVectorSize() - 1; j >= 0; j--)
-                if (i != partOfValues.getRowsCount() - 1 || j != partOfValues.getColumnsCount() - 1)
-                {
-                    D2.setItem(placeInd, 0, originX.getItem(j));
-                    D2.setItem(placeInd, 2, 1);
-                    placeInd++;
-                }
-        }
-        double detD2 = D2.gaussianDeterminant();
-        Matrix D3 = new Matrix(3, 3);
-        for (int i = 0, placeInd = 0; i < originY.getVectorSize(); i++)
-        {
-            for (int j = originX.getVectorSize() - 1; j >= 0; j--)
-                if (i != partOfValues.getRowsCount() - 1 || j != partOfValues.getColumnsCount() - 1)
-                {
-                    D3.setItem(placeInd, 0, originX.getItem(j));
-                    D3.setItem(placeInd, 1, originY.getItem(i));
-                    D3.setItem(placeInd, 2, 1);
-                    placeInd++;
-                }
-        }
-        double detD3 = D3.gaussianDeterminant();
+        double detA = this.planeCoefficient(xToPlace, yToPlace, leftUpTriangle, "A");
+        double detB = this.planeCoefficient(xToPlace, yToPlace, leftUpTriangle, "B");
+        double detC = this.planeCoefficient(xToPlace, yToPlace, leftUpTriangle, "C");
+        double detD = this.planeCoefficient(xToPlace, yToPlace, leftUpTriangle, "D");
 
         System.out.println(rowPlaceInd + " " + colPlaceInd);
         double currentY, currentX, value;
@@ -123,67 +120,24 @@ public class Interpolation {
             for (int placeJ = colPlaceInd; placeJ < changeValue.getColumnsCount()/2 + colPlaceInd - placeI + rowPlaceInd + 1; placeJ++)
             {
                 currentX = targetX.getItem(placeJ);
-                value = (detD0 - detD1 * currentX - detD2 * currentY) / detD3;
+                value = - ((detA * currentX + detB * currentY + detD) / detC);
                 if (changeValue.getItem(placeI, placeJ) == 0)
                     changeValue.setItem(placeI, placeJ, value);
             }
         }
         changeValue.printMatrix();
 
-        D0.setColumn(lefUpTriangle.getVector(), 2);
-        for (int i = originY.getVectorSize() - 1, placeInd = 0; i >= 0; i--)
-        {
-            for (int j = 0; j < originX.getVectorSize(); j++)
-                if (i != 0 || j != 0)
-                {
-                    D0.setItem(placeInd, 0, originX.getItem(j));
-                    D0.setItem(placeInd, 1, originY.getItem(i));
-                    placeInd++;
-                }
-        }
-        detD0 = D0.gaussianDeterminant();
-        D1.setColumn(lefUpTriangle.getVector(), 1);
-        for (int i = originY.getVectorSize() - 1, placeInd = 0; i >= 0; i--)
-        {
-            for (int j = 0; j < originX.getVectorSize(); j++)
-                if (i != 0 || j != 0)
-                {
-                    D1.setItem(placeInd, 2, 1);
-                    D1.setItem(placeInd, 0, originY.getItem(i));
-                    placeInd++;
-                }
-        }
-        detD1 = D1.gaussianDeterminant();
-        D2.setColumn(lefUpTriangle.getVector(), 1);
-        for (int i = originY.getVectorSize() - 1, placeInd = 0; i >= 0; i--)
-        {
-            for (int j = 0; j < originX.getVectorSize(); j++)
-                if (i != 0 || j != 0)
-                {
-                    D2.setItem(placeInd, 2, 1);
-                    D2.setItem(placeInd, 0, originX.getItem(j));
-                    placeInd++;
-                }
-        }
-        detD2 = D2.gaussianDeterminant();
-        for (int i = originY.getVectorSize() - 1, placeInd = 0; i >= 0; i--)
-        {
-            for (int j = 0; j < originX.getVectorSize(); j++)
-                if (i != 0 || j != 0)
-                {
-                    D3.setItem(placeInd, 2, 1);
-                    D3.setItem(placeInd, 0, originY.getItem(i));
-                    D3.setItem(placeInd, 0, originX.getItem(j));
-                    placeInd++;
-                }
-        }
-        detD3 = D3.gaussianDeterminant();
+        Vector rightDownTriangle = new Vector(3);
+        this.setRightDownTriangle(rightDownTriangle, originX, originY, partOfValues, xToPlace, yToPlace);
+        rightDownTriangle.printFormattedVector(); xToPlace.printFormattedVector(); yToPlace.printFormattedVector();
+
+        detA = this.planeCoefficient(xToPlace, yToPlace, rightDownTriangle, "A");
+        detB = this.planeCoefficient(xToPlace, yToPlace, rightDownTriangle, "B");
+        detC = this.planeCoefficient(xToPlace, yToPlace, rightDownTriangle, "C");
+        detD = this.planeCoefficient(xToPlace, yToPlace, rightDownTriangle, "D");
 
         Matrix changeMatrixPart = changeValue.partOfMatrix(colPlaceInd, colPlaceInd + changeValue.getColumnsCount()/2, rowPlaceInd, rowPlaceInd + changeValue.getRowsCount()/2);
         changeMatrixPart.printMatrix();
-        for (int i = 1; i < changeMatrixPart.getRowsCount(); i++)
-            for (int j = changeMatrixPart.getColumnsCount() - 1; j >= changeMatrixPart.getColumnsCount() - i; j--)
-                break;
 
         for (int placeI = rowPlaceInd + 1; placeI < changeValue.getRowsCount()/2 + rowPlaceInd + 1; placeI++)
         {
@@ -191,7 +145,7 @@ public class Interpolation {
             for (int placeJ = changeValue.getColumnsCount() / 2 + colPlaceInd; placeJ >= changeValue.getColumnsCount() / 2 + colPlaceInd - placeI + rowPlaceInd; placeJ--)
             {
                 currentX = targetX.getItem(placeJ);
-                value = (detD0 - detD1 * currentX - detD2 * currentY) / detD3;
+                value = - ((detA * currentX + detB * currentY + detD) / detC);
                 if (changeValue.getItem(placeI, placeJ) == 0)
                     changeValue.setItem(placeI, placeJ, value);
             }
@@ -254,6 +208,7 @@ public class Interpolation {
             {
                 xPart = this.getX().partOfVector(colInd, colInd + 1);
                 Matrix valuesPart = this.values.partOfMatrix(colInd, colInd + 1, rowInd, rowInd + 1);
+
                 this.triangleValueArithmetic(xPart, yPart, valuesPart, copyX, copyY, copyValues, newRowInd, newColInd);
             }
         }

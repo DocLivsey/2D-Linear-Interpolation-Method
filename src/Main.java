@@ -8,8 +8,8 @@ public class Main {
     public static final String OUTPUT = "\u001B[35m"; // PURPLE
     public static final String HEADER_OUTPUT = "\u001B[36m"; // CYAN
     public static void main(String[] args) throws FileNotFoundException {
-        String pathToVector = "D:/My Files/All Scripts/численные методы/двумерное линейное интерполирование/2D-Linear-Interpolation/java solutions/src/vectorInput.txt";
-        String pathToMatrix = "D:/My Files/All Scripts/численные методы/двумерное линейное интерполирование/2D-Linear-Interpolation/java solutions/src/matrixInput.txt";
+        String pathToVector = "src/vectorInput.txt";
+        String pathToMatrix = "src/matrixInput.txt";
 
         Interpolation plot = new Interpolation(pathToVector, pathToVector, pathToMatrix, 1);
         plot.linear2DMethod();
