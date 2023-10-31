@@ -7,11 +7,12 @@ public class Main {
     public static final String CHOOSE = "\u001B[34m"; // BLUE
     public static final String OUTPUT = "\u001B[35m"; // PURPLE
     public static final String HEADER_OUTPUT = "\u001B[36m"; // CYAN
-    public static void main(String[] args) throws FileNotFoundException {
-        String pathToVector = "src/vectorInput.txt";
+    public static void main(String[] args) throws IOException {
+        String pathToXVector = "src/vectorXInput.txt";
+        String pathToYVector = "src/vectorYInput.txt";
         String pathToMatrix = "src/matrixInput.txt";
 
-        Interpolation plot = new Interpolation(pathToVector, pathToVector, pathToMatrix, 1);
+        Interpolation plot = new Interpolation(pathToXVector, pathToYVector, pathToMatrix, 3);
         plot.linear2DMethod();
 
     }

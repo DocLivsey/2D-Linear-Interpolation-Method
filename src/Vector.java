@@ -92,6 +92,12 @@ public class Vector {
         }
         System.out.println("}" + Main.RESET);
     }
+    void writeInFile(String pathToFile) throws IOException {
+        FileWriter fileWriter = new FileWriter(pathToFile);
+        for (int i = 0; i < this.vectorSize; i++)
+            fileWriter.write(this.getItem(i) + " ");
+        fileWriter.close();
+    }
     void addItem(double item)
     {
         this.vectorSize ++;

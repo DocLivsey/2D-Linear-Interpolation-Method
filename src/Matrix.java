@@ -141,9 +141,18 @@ public class Matrix {
         }
         System.out.print(Main.RESET);
     }
-    void writeInFile()
+    void writeInFile(String pathToFile) throws IOException
     {
-
+        FileWriter fileWriter = new FileWriter(pathToFile);
+        for (int i = 0; i < this.rowsCount; i++)
+        {
+            for (int j = 0; j < this.columnsCount; j++)
+            {
+                fileWriter.write(this.getItem(i, j) + " ");
+            }
+            fileWriter.write("\n");
+        }
+        fileWriter.close();
     }
     void addRow(double[] row)
     {
@@ -407,5 +416,26 @@ public class Matrix {
         for (int i = 0; i < this.rowsCount; i++)
         { determinant *= tempMatrix.getItem(i, i); }
         return Math.round(determinant);
+    }
+    double matrix3By3Determinant()
+    {
+        if (this.rowsCount != 3 || this.columnsCount != 3)
+        {
+            System.out.println(Main.ERROR + "Ошибка! Данный метод вычисления определителя работает только для матриц 3 на 3");
+            return  0;
+        }
+        else
+        {
+            double firstTerm = 1;
+            for (int i = 0; i < this.rowsCount; i++)
+                firstTerm *= this.getItem(i, i);
+            double secondTerm = this.getItem(0, 1) * this.getItem(1, 2) * this.getItem(2, 0);
+            double thirdTerm = this.getItem(0, 2) * this.getItem(1, 0) * this.getItem(2, 1);
+            double fourthTerm = this.getItem(0, 0) * this.getItem(1, 2) * this.getItem(2, 1);
+            double fifthTerm = this.getItem(0, 1) * this.getItem(1, 0) * this.getItem(2, 2);
+            double sixthTerm = this.getItem(0, 2) * this.getItem(1,1) * this.getItem(2, 0);
+
+            return firstTerm + secondTerm + thirdTerm - fourthTerm - fifthTerm - sixthTerm;
+        }
     }
 }
