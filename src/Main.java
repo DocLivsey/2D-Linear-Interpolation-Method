@@ -12,7 +12,7 @@ public class Main {
         String pathToYVector = "src/vectorYInput.txt";
         String pathToMatrix = "src/matrixInput.txt";
 
-        Interpolation plot = new Interpolation(pathToXVector, pathToYVector, pathToMatrix, 3);
+        Interpolation plot = new Interpolation(pathToXVector, pathToYVector, pathToMatrix, 2);
         plot.linear2DMethod();
 
     }

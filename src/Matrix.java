@@ -50,6 +50,9 @@ public class Matrix {
         this.rowsCount = rowsCount;
         this.columnsCount = columnsCount;
         this.matrix = new double[rowsCount][columnsCount];
+        for (int i = 0; i < this.rowsCount; i++)
+            for (int j = 0; j < this.columnsCount; j++)
+                this.setItem(i, j, Double.NaN);
     }
     Matrix(double[][] matrix, int rowsCount, int columnsCount)
     {
@@ -142,6 +145,21 @@ public class Matrix {
         System.out.print(Main.RESET);
     }
     void writeInFile(String pathToFile) throws IOException
+    {
+        FileWriter fileWriter = new FileWriter(pathToFile);
+        for (int i = 0; i < this.rowsCount; i++)
+        {
+            for (int j = 0; j < this.columnsCount; j++)
+            {
+                DecimalFormat formattedOut = new DecimalFormat("#.##");
+                String result = formattedOut.format(this.getItem(i, j));
+                fileWriter.write(result + " ");
+            }
+            fileWriter.write("\n");
+        }
+        fileWriter.close();
+    }
+    void writeFormattedInFile(String pathToFile) throws IOException
     {
         FileWriter fileWriter = new FileWriter(pathToFile);
         for (int i = 0; i < this.rowsCount; i++)

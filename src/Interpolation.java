@@ -32,10 +32,7 @@ public class Interpolation {
     double pointStepArithmetic(double step, Vector point)
     { return point.getVector()[0] + step; }
     double methodStepArithmetic(Vector point, int expandedSize)
-    {
-        int coefficient = expandedSize / 2;
-        return (point.getItem(1) - point.getItem(0)) / coefficient;
-    }
+    { return (point.getItem(point.getVectorSize() - 1) - point.getItem(0)) / (expandedSize - 1); }
     void setLeftUpTriangle(Vector leftUpTriangle, Vector pointsX, Vector pointsY, Matrix partOfValues, Vector xToPlace, Vector yToPlace)
     {
         for (int i = 0, placeInd = 0; i < partOfValues.getRowsCount(); i++)
@@ -99,7 +96,7 @@ public class Interpolation {
             return coeffMatrix.matrix3By3Determinant();
         }
     }
-    void triangleValueArithmetic(Vector originX, Vector originY, Matrix partOfValues, Vector targetX, Vector targetY, Matrix changeValue, int rowPlaceInd, int colPlaceInd)
+    void triangleArithmetic(Vector originX, Vector originY, Matrix partOfValues, Vector targetX, Vector targetY, Matrix changeValue, int rowPlaceInd, int colPlaceInd, int rowsSectionLength, int colsSectionLength)
     {
         Vector xToPlace = new Vector(3);
         Vector yToPlace = new Vector(3);
@@ -111,17 +108,15 @@ public class Interpolation {
         double detC = this.planeCoefficient(xToPlace, yToPlace, leftUpTriangle, "C");
         double detD = this.planeCoefficient(xToPlace, yToPlace, leftUpTriangle, "D");
 
+        //System.out.println("nodeCoordinates: " + rowPlaceInd + " " + colPlaceInd);
+
         double currentY, currentX, value;
-        for (int placeI = rowPlaceInd; placeI < changeValue.getRowsCount()/2 + rowPlaceInd; placeI++)
+        for (int placeI = rowPlaceInd; placeI < rowsSectionLength + rowPlaceInd; placeI++)
         {
             currentY = targetY.getItem(placeI);
-            for (int placeJ = colPlaceInd; placeJ < changeValue.getColumnsCount()/2 + colPlaceInd - placeI + rowPlaceInd + 1; placeJ++)
-            {
-                currentX = targetX.getItem(placeJ);
-                value = - ((detA * currentX + detB * currentY + detD) / detC);
-                if (changeValue.getItem(placeI, placeJ) == 0)
-                    changeValue.setItem(placeI, placeJ, value);
-            }
+            for (int placeJ = colPlaceInd; placeJ < colsSectionLength + colPlaceInd - placeI + rowPlaceInd; placeJ++)
+            { this.valueArithmetic(targetX, currentY, rowPlaceInd, colPlaceInd, changeValue, detB, detA, detD, detC, placeI, placeJ, rowsSectionLength, colsSectionLength); }
+
         }
 
         Vector rightDownTriangle = new Vector(3);
@@ -132,16 +127,23 @@ public class Interpolation {
         detC = this.planeCoefficient(xToPlace, yToPlace, rightDownTriangle, "C");
         detD = this.planeCoefficient(xToPlace, yToPlace, rightDownTriangle, "D");
 
-        for (int placeI = rowPlaceInd + 1; placeI < changeValue.getRowsCount()/2 + rowPlaceInd + 1; placeI++)
+        for (int placeI = rowPlaceInd; placeI < rowsSectionLength + rowPlaceInd + 1; placeI++)
         {
             currentY = targetY.getItem(placeI);
-            for (int placeJ = changeValue.getColumnsCount() / 2 + colPlaceInd; placeJ >= changeValue.getColumnsCount() / 2 + colPlaceInd - placeI + rowPlaceInd; placeJ--)
-            {
-                currentX = targetX.getItem(placeJ);
-                value = - ((detA * currentX + detB * currentY + detD) / detC);
-                if (changeValue.getItem(placeI, placeJ) == 0)
-                    changeValue.setItem(placeI, placeJ, value);
-            }
+            for (int placeJ = colsSectionLength + colPlaceInd; placeJ >= colsSectionLength + colPlaceInd - placeI + rowPlaceInd; placeJ--)
+            { this.valueArithmetic(targetX, currentY, rowPlaceInd, colPlaceInd, changeValue, detB, detA, detD, detC, placeI, placeJ, rowsSectionLength, colsSectionLength); }
+        }
+    }
+    void valueArithmetic(Vector targetX, double currentY, int rowPlaceInd, int colPlaceInd, Matrix changeValue, double detB, double detA, double detD, double detC, int placeI, int placeJ, int rowsSectionLength, int colsSectionLength)
+    {
+        double currentX;
+        double value;
+        currentX = targetX.getItem(placeJ);
+        value = - ((detA * currentX + detB * currentY + detD) / detC);
+        if (Double.isNaN(changeValue.getItem(placeI, placeJ)))
+        {
+            //System.out.println("i= " + placeI + " j= " + placeJ + " borders: " + rowsSectionLength + " " + colsSectionLength);
+            changeValue.setItem(placeI, placeJ, value);
         }
     }
     void vectorExpansion(Vector points, Vector partOfPoints, double step)
@@ -160,15 +162,13 @@ public class Interpolation {
             newColumnsCount = newColumnsCount * 2 - 1;
         }
         Matrix newValuesMatrix = new Matrix(newRowsCount, newColumnsCount);
-        for (int i = 0, placeI = 0; placeI < newRowsCount; i++, placeI+=(newRowsCount - valuesMatrix.getRowsCount()) / 2 + 1)
-            for (int j = 0, placeJ = 0; placeJ < newColumnsCount; j++, placeJ+=(newColumnsCount - valuesMatrix.getColumnsCount()) / 2 + 1)
+        for (int i = 0, placeI = 0; i < valuesMatrix.getRowsCount(); i++, placeI += newRowsCount / (valuesMatrix.getRowsCount() - 1))
+            for (int j = 0, placeJ = 0; j < valuesMatrix.getColumnsCount(); j++, placeJ += newColumnsCount / (valuesMatrix.getColumnsCount() - 1))
                 newValuesMatrix.setItem(placeI, placeJ, valuesMatrix.getItem(i, j));
         return newValuesMatrix;
     }
     void linear2DMethod() throws IOException {
         // начальные значения границ интерполирования
-        double left = this.getX().getItem(0);
-        double right = this.getY().getItem(this.getX().getVectorSize() - 1);
 
         // копируем векторы Х и У, и матрицу значений
         Vector copyX = this.getX().cloneVector();
@@ -192,20 +192,23 @@ public class Interpolation {
                 this.vectorExpansion(copyX, xPart, stepX);
             }
         }
-        for (int rowInd = 0, newRowInd = 0; rowInd < this.values.getRowsCount() - 1; rowInd++, newRowInd+=copyValues.getRowsCount()/(this.values.getRowsCount()/2))
+        copyX.printVector(); copyX.printVector();
+        int rowsSectionLength = copyValues.getRowsCount() / (this.values.getRowsCount() - 1);
+        int colsSectionLength = copyValues.getColumnsCount() / (this.values.getColumnsCount() - 1);
+        for (int rowInd = 0, newRowInd = 0; rowInd < this.values.getRowsCount() - 1; rowInd++, newRowInd += rowsSectionLength)
         {
             yPart = this.getY().partOfVector(rowInd, rowInd + 1);
-            for (int colInd = 0, newColInd = 0; colInd < this.values.getColumnsCount() - 1; colInd++, newColInd+=copyValues.getColumnsCount()/(this.values.getColumnsCount()/2))
+            for (int colInd = 0, newColInd = 0; colInd < this.values.getColumnsCount() - 1; colInd++, newColInd += colsSectionLength)
             {
                 xPart = this.getX().partOfVector(colInd, colInd + 1);
                 Matrix valuesPart = this.values.partOfMatrix(colInd, colInd + 1, rowInd, rowInd + 1);
-                this.triangleValueArithmetic(xPart, yPart, valuesPart, copyX, copyY, copyValues, newRowInd, newColInd);
+                this.triangleArithmetic(xPart, yPart, valuesPart, copyX, copyY, copyValues, newRowInd, newColInd, rowsSectionLength, colsSectionLength);
             }
         }
         this.arguments.set(0, copyX); this.arguments.set(1, copyY); this.values = copyValues;
         this.values.writeInFile("src/matrixOutput.txt");
         this.arguments.get(0).writeInFile("src/vectorXOutput.txt");
-        this.arguments.get(1).writeInFile("src/vectorYOutput.txt");
-        this.values.printMatrix();
+        this.arguments.get(1).writeFormattedInFile("src/vectorYOutput.txt");
+        this.values.printFormattedMatrix();
     }
 }

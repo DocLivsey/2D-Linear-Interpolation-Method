@@ -98,6 +98,16 @@ public class Vector {
             fileWriter.write(this.getItem(i) + " ");
         fileWriter.close();
     }
+    void writeFormattedInFile(String pathToFile) throws IOException {
+        FileWriter fileWriter = new FileWriter(pathToFile);
+        for (int i = 0; i < this.vectorSize; i++)
+        {
+            DecimalFormat shortOut = new DecimalFormat("#.##");
+            String result = shortOut.format(this.getItem(i));
+            fileWriter.write(result + " ");
+        }
+        fileWriter.close();
+    }
     void addItem(double item)
     {
         this.vectorSize ++;
