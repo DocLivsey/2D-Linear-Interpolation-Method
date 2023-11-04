@@ -11,9 +11,12 @@ public class Main {
         String pathToXVector = "src/vectorXInput.txt";
         String pathToYVector = "src/vectorYInput.txt";
         String pathToMatrix = "src/matrixInput.txt";
+        final int coefficient = 2;
 
-        Interpolation plot = new Interpolation(pathToXVector, pathToYVector, pathToMatrix, 2);
-        plot.linear2DMethod();
+        Interpolation interpolation = new Interpolation(pathToXVector, pathToYVector, pathToMatrix, coefficient);
+        interpolation.linear2DMethod();
 
+        //Interpolation advancedInterpolation = new Interpolation(pathToXVector, pathToYVector, pathToMatrix, coefficient);
+        //advancedInterpolation.advancedLinear2DMethod();
     }
 }
